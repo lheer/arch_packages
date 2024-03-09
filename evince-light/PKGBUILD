@@ -1,0 +1,39 @@
+pkgname=evince-light
+_pkgname=evince
+pkgver=45.0
+pkgrel=1
+pkgdesc="GTK3 document viewer, complete features, no gnome dependencies"
+url="https://wiki.gnome.org/Apps/Evince"
+arch=('i686' 'x86_64')
+license=('GPL')
+depends=('dconf' 'gtk3' 'poppler-glib' 'gsettings-desktop-schemas' 'gspell' 'libarchive' 'gst-plugins-base-libs' 'libsynctex')
+makedepends=('meson' 'ninja' 'texlive-bin' 'python')
+optdepends=('texlive-bin: DVI support'
+			'gvfs: for session saving and bookmarking')
+provides=("${_pkgname}")
+conflicts=("${_pkgname}" "evince-no-gnome")
+options=('!emptydirs')
+_commit=80b393cac6468561664810d5e4a0f1897507062b  # tags/45.0^0
+source=("git+https://gitlab.gnome.org/GNOME/evince.git#commit=$_commit")
+sha256sums=('SKIP')
+
+build() {
+	arch-meson "$_pkgname" build \
+		-D nautilus=false \
+		-D introspection=false \
+		-D thumbnail_cache=disabled \
+		-D keyring=disabled \
+        -D gtk_doc=false \
+        -D user_doc=false \
+        -D xps=disabled \
+        -D djvu=disabled
+	meson compile -C build -j4
+}
+
+check() {
+	meson test -C build --print-errorlogs
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install -C build
+}
